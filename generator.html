@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Генератор ссылки на карту</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f8f9fa;
+      padding: 2rem;
+      text-align: center;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      width: 300px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #218838;
+    }
+    #output {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔗 Генератор карты для клиента</h2>
+  <p>Вставь координаты (например: 51.9945643,70.9241514)</p>
+  <input type="text" id="coords" placeholder="широта,долгота">
+  <br>
+  <button onclick="generateLink()">Сгенерировать ссылку</button>
+  <div id="output"></div>
+
+  <script>
+    function generateLink() {
+      const coords = document.getElementById('coords').value.trim();
+      if (coords.includes(',')) {
+        const link = `https://www.google.com/maps?q=${coords}`;
+        document.getElementById('output').innerHTML = `
+          <p>Скопируй и отправь клиенту:</p>
+          <a href="${link}" target="_blank">${link}</a>
+        `;
+      } else {
+        document.getElementById('output').innerText = 'Пожалуйста, введи координаты через запятую';
+      }
+    }
+  </script>
+</body>
+</html>
