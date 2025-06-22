@@ -46,23 +46,44 @@
 </head>
 <body>
   <h2>🔗 Генератор карты для клиента</h2>
-  <p>Вставь координаты (например: 51.9945643,70.9241514)</p>
-  <input type="text" id="coords" placeholder="широта,долгота">
+  <p>Вставь координаты в любом формате:</p>
+  <p><small>(например: <code>51.99456,70.92415</code> или <code>51°59'40.4"N, 70°55'27.0"E</code>)</small></p>
+  <input type="text" id="coords" placeholder="Координаты">
   <br>
-  <button onclick="generateLink()">Сгенерировать ссылку</button>
+  <button onclick="processInput()">Сгенерировать ссылку</button>
   <div id="output"></div>
 
   <script>
-    function generateLink() {
-      const coords = document.getElementById('coords').value.trim();
-      if (coords.includes(',')) {
-        const link = `https://www.google.com/maps?q=${coords}`;
+    function dmsToDecimal(dms) {
+      const regex = /(\d+)°(\d+)'(\d+(?:\.\d+)?)\"?([NSEW])/i;
+      const match = dms.match(regex);
+      if (!match) return null;
+      let [_, deg, min, sec, dir] = match;
+      let dec = parseFloat(deg) + parseFloat(min)/60 + parseFloat(sec)/3600;
+      if (dir === 'S' || dir === 'W') dec *= -1;
+      return dec.toFixed(6);
+    }
+
+    function processInput() {
+      const input = document.getElementById('coords').value.trim();
+      const parts = input.split(',');
+      let lat, lng;
+
+      if (parts.length === 2 && input.includes('°')) {
+        lat = dmsToDecimal(parts[0]);
+        lng = dmsToDecimal(parts[1]);
+      } else {
+        [lat, lng] = parts;
+      }
+
+      if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+        const link = `https://www.google.com/maps?q=${lat},${lng}`;
         document.getElementById('output').innerHTML = `
           <p>Скопируй и отправь клиенту:</p>
           <a href="${link}" target="_blank">${link}</a>
         `;
       } else {
-        document.getElementById('output').innerText = 'Пожалуйста, введи координаты через запятую';
+        document.getElementById('output').innerText = 'Неверный формат координат. Попробуй ещё раз.';
       }
     }
   </script>
