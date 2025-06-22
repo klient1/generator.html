@@ -27,6 +27,7 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      margin: 5px;
     }
     button:hover {
       background: #218838;
@@ -47,24 +48,35 @@
 <body>
   <h2>🔗 Генератор карты для клиента</h2>
   <p>Вставь координаты в любом формате:</p>
-  <p><small>(например: <code>51.99456,70.92415</code> или <code>51°59'40.4"N, 70°55'27.0"E</code>)</small></p>
+  <p><small>(например: <code>51.99456,70.92415</code> или <code>51°59'40.4&quot;N, 70°55'27.0&quot;E</code>)</small></p>
   <input type="text" id="coords" placeholder="Координаты">
   <br>
   <button onclick="processInput()">Сгенерировать ссылку</button>
   <div id="output"></div>
 
   <script>
+    async function shortenLink(longUrl) {
+      const apiUrl = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`;
+      try {
+        const response = await fetch(apiUrl);
+        return await response.text();
+      } catch (e) {
+        console.error('Ошибка сокращения ссылки:', e);
+        return longUrl;
+      }
+    }
+
     function dmsToDecimal(dms) {
-      const regex = /(\d+)°(\d+)'(\d+(?:\.\d+)?)\"?([NSEW])/i;
-      const match = dms.match(regex);
+      const regex = /(\d+)[°\s](\d+)['](\d+(?:\.\d+)?)[\"]?\s*([NSEW])/i;
+      const match = dms.trim().match(regex);
       if (!match) return null;
       let [_, deg, min, sec, dir] = match;
       let dec = parseFloat(deg) + parseFloat(min)/60 + parseFloat(sec)/3600;
       if (dir === 'S' || dir === 'W') dec *= -1;
-      return dec.toFixed(6);
+      return dec;
     }
 
-    function processInput() {
+    async function processInput() {
       const input = document.getElementById('coords').value.trim();
       const parts = input.split(',');
       let lat, lng;
@@ -73,18 +85,30 @@
         lat = dmsToDecimal(parts[0]);
         lng = dmsToDecimal(parts[1]);
       } else {
-        [lat, lng] = parts;
+        lat = parseFloat(parts[0]);
+        lng = parseFloat(parts[1]);
       }
 
-      if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
-        const link = `https://www.google.com/maps?q=${lat},${lng}`;
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const longLink = `https://www.google.com/maps?q=${lat},${lng}`;
+        const shortLink = await shortenLink(longLink);
+
         document.getElementById('output').innerHTML = `
           <p>Скопируй и отправь клиенту:</p>
-          <a href="${link}" target="_blank">${link}</a>
+          <a href="${shortLink}" target="_blank" id="mapLink">${shortLink}</a><br>
+          <button onclick="copyToClipboard('${shortLink}')">📋 Скопировать ссылку</button>
         `;
       } else {
         document.getElementById('output').innerText = 'Неверный формат координат. Попробуй ещё раз.';
       }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Ссылка скопирована!');
+      }, () => {
+        alert('Ошибка при копировании');
+      });
     }
   </script>
 </body>
